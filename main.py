@@ -40,44 +40,49 @@ file_name = "vectored_index.pkl"
 
 #placeholder UI component
 main_place_holder = st.empty()
-
+is_error = False
 #When the button is pressed
 if process_urls:
     #Loading urls
     main_place_holder.text("Data Loading...Started...✅✅✅ ")
-    url_loader = UnstructuredURLLoader(urls=urls)
+    try:
+        url_loader = UnstructuredURLLoader(urls=urls)
 
-    data = url_loader.load()
+        data = url_loader.load()
 
-    #Splitting data into chunks
-    main_place_holder.text("Text Splitter...Started...✅✅✅ ")
+        #Splitting data into chunks
+        main_place_holder.text("Text Splitter...Started...✅✅✅ ")
 
-    splitter = RecursiveCharacterTextSplitter(
-        separators=["\n\n","\n","."," "],
-        chunk_size=1000,
-        chunk_overlap=200
-    )
+        splitter = RecursiveCharacterTextSplitter(
+            separators=["\n\n","\n","."," "],
+            chunk_size=1000,
+            chunk_overlap=200
+        )
 
-    chunks = splitter.split_documents(data)
+        chunks = splitter.split_documents(data)
 
-    #Embedding data using huggingface
-    main_place_holder.text("Data Embedding...Started...✅✅✅ ")
+        #Embedding data using huggingface
+        main_place_holder.text("Data Embedding...Started...✅✅✅ ")
 
-    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
+        embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
 
-    #Creating a fiass vector index
-    vector_faiss_index = FAISS.from_documents(chunks,embeddings)
-    time.sleep(2)
+        #Creating a fiass vector index
+        vector_faiss_index = FAISS.from_documents(chunks,embeddings)
+        time.sleep(2)
 
-    #Index is ready and now saving the database
-    with open(file_name,"wb") as file:
-        pickle.dump(vector_faiss_index,file)
-        print("THe file has been saved!")
+        #Index is ready and now saving the database
+        with open(file_name,"wb") as file:
+            pickle.dump(vector_faiss_index,file)
+            print("THe file has been saved!")
 
-
+    except:
+        is_error=True
+        st.write("**Some Error has occurred!**")
+        st.write("Please suppy URLS with text data or you can reboot the application.")
 #Now Creating a Question box which allows user to ask questions
-
-query = main_place_holder.text_input("Question : ")
+query =""
+if not is_error:
+    query = main_place_holder.text_input("Question : ")
 
 if query:
     #Loading database
